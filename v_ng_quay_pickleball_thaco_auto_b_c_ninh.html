@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng Quay Pickleball - THACO AUTO Bắc Ninh 2026</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti cho hiệu ứng pháo giấy -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome (Icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4; /* Xanh lá siêu nhạt, hợp vibe Pickleball */
+        }
+        
+        /* Tùy chỉnh thanh cuộn cho textarea và lịch sử */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Nút quay trung tâm vòng quay */
+        .spin-btn {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15), inset 0 -4px 0 rgba(0, 0, 0, 0.05);
+            transition: all 0.1s ease;
+        }
+        .spin-btn:active {
+            transform: translate(-50%, -47%) !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .spin-btn:disabled {
+            opacity: 0.8;
+            cursor: not-allowed;
+            transform: translate(-50%, -50%) !important;
+            box-shadow: none;
+        }
+
+        /* Mũi tên chỉ định */
+        .pointer {
+            clip-path: polygon(100% 50%, 0 0, 0 100%);
+        }
+
+        /* Animation cho lịch sử */
+        @keyframes slideIn {
+            0% { transform: translateX(20px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        .history-item {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-white border-b-4 border-emerald-500 sticky top-0 z-50 shadow-md">
+        <div class="max-w-[1400px] mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-start">
+                <div class="bg-white p-2 rounded-lg border border-slate-100 shadow-sm">
+                    <img src="Asset 6thaco auto.png" alt="THACO AUTO Bắc Ninh" class="h-12 md:h-14 object-contain">
+                </div>
+                <div class="text-center sm:text-left">
+                    <h1 class="font-black text-xl md:text-2xl text-blue-800 uppercase tracking-tight">Hội thao THACO AUTO Bắc Ninh năm 2026</h1>
+                    <h2 class="font-bold text-md md:text-lg text-emerald-600 flex items-center justify-center sm:justify-start gap-2">
+                        <i class="fas fa-table-tennis-paddle-ball"></i> Bộ môn: Pickleball
+                    </h2>
+                </div>
+            </div>
+            
+            <div class="flex gap-2">
+                <button onclick="window.location.reload()" class="px-4 py-2 text-sm font-semibold bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors border border-slate-300">
+                    <i class="fas fa-sync-alt mr-1"></i> Tải lại
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-[1400px] w-full mx-auto p-4 md:p-6 lg:py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
+            
+            <!-- CỘT TRÁI: VÒNG QUAY (Chiếm 3/5) -->
+            <div class="lg:col-span-3 bg-white rounded-3xl shadow-lg border border-emerald-100 p-6 flex flex-col items-center relative overflow-hidden">
+                <!-- BG Pattern nhẹ -->
+                <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(#10b981 1px, transparent 1px); background-size: 20px 20px;"></div>
+                
+                <h3 class="font-black text-2xl text-slate-800 mb-6 uppercase tracking-wider relative z-10 text-center">
+                    <span class="text-emerald-500">Vòng quay</span> bốc thăm
+                </h3>
+                
+                <div class="relative w-full max-w-[550px] aspect-square z-10">
+                    <!-- Khung viền 3D bên ngoài -->
+                    <div class="absolute inset-[-10px] rounded-full bg-gradient-to-br from-emerald-100 to-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.1)] pointer-events-none z-0"></div>
+                    <div class="absolute inset-0 rounded-full border-[16px] border-white shadow-inner pointer-events-none z-10 box-border"></div>
+                    
+                    <!-- Canvas -->
+                    <canvas id="wheelCanvas" width="800" height="800" class="w-full h-full rounded-full relative z-0"></canvas>
+                    
+                    <!-- Mũi tên -->
+                    <div class="absolute top-1/2 -right-6 -translate-y-1/2 w-10 h-12 bg-red-500 pointer z-20 shadow-[0_4px_10px_rgba(239,68,68,0.5)]"></div>
+                    <div class="absolute top-1/2 -right-4 -translate-y-1/2 w-8 h-10 bg-yellow-400 pointer z-20"></div>
+                    
+                    <!-- Nút Quay -->
+                    <button id="spinBtn" class="spin-btn absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-gradient-to-b from-white to-slate-100 rounded-full flex flex-col items-center justify-center font-black text-2xl text-blue-800 z-30 border-8 border-white shadow-[0_0_20px_rgba(0,0,0,0.15)] hover:scale-105 active:scale-95 transition-transform uppercase">
+                        <span>QUAY</span>
+                        <i class="fas fa-hand-pointer text-sm mt-1 text-emerald-500 animate-bounce"></i>
+                    </button>
+                </div>
+                
+                <!-- Hiển thị kết quả trúng thưởng -->
+                <div id="winnerDisplay" class="mt-8 text-3xl font-black text-center text-red-600 min-h-[48px] opacity-0 transition-all duration-300 scale-90 relative z-10 drop-shadow-md bg-yellow-50 px-8 py-3 rounded-2xl border-2 border-yellow-200"></div>
+            </div>
+
+            <div class="lg:col-span-2 flex flex-col gap-6 relative z-10">
+                
+                <!-- Bảng Danh sách -->
+                <div class="bg-white rounded-3xl shadow-lg border border-emerald-100 p-6 flex flex-col">
+                    <div class="flex justify-between items-end mb-4">
+                        <h3 class="font-bold text-xl text-slate-800 flex items-center gap-2">
+                            <i class="fas fa-users text-emerald-500"></i> Danh sách VĐV
+                        </h3>
+                        <span id="playerCount" class="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">0 VĐV</span>
+                    </div>
+                    
+                    <p class="text-xs text-slate-500 mb-2">Nhập mỗi dòng 1 tên. Dữ liệu sẽ tự động cập nhật vào vòng quay.</p>
+                    <textarea id="namesInput" class="w-full h-56 p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white outline-none resize-none font-medium text-slate-700 mb-4 leading-relaxed transition-colors shadow-inner" placeholder="Nhập tên vận động viên..."></textarea>
+                    
+                    <div class="flex flex-col gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <div class="relative flex items-center justify-center">
+                                <input type="checkbox" id="removeWinnerCb" checked class="peer appearance-none w-5 h-5 border-2 border-slate-300 rounded focus:ring-2 focus:ring-blue-500 checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer">
+                                <i class="fas fa-check absolute text-white text-xs opacity-0 peer-checked:opacity-100 pointer-events-none"></i>
+                            </div>
+                            <span class="font-medium text-slate-700 group-hover:text-blue-600 transition-colors">Không trùng lặp (Xoá tên khi trúng)</span>
+                        </label>
+                        
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <div class="relative flex items-center justify-center">
+                                <input type="checkbox" id="soundCb" checked class="peer appearance-none w-5 h-5 border-2 border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 checked:bg-emerald-500 checked:border-transparent transition-all cursor-pointer">
+                                <i class="fas fa-check absolute text-white text-xs opacity-0 peer-checked:opacity-100 pointer-events-none"></i>
+                            </div>
+                            <span class="font-medium text-slate-700 group-hover:text-emerald-600 transition-colors">Bật âm thanh vòng quay</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-lg border border-emerald-100 p-6 flex flex-col flex-grow">
+                    <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                        <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                            <i class="fas fa-trophy text-yellow-500"></i> Lịch sử bốc thăm
+                        </h3>
+                        <button id="clearHistoryBtn" class="text-xs font-semibold px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors text-slate-500 flex items-center gap-1">
+                            <i class="fas fa-trash-alt"></i> Xoá lịch sử
+                        </button>
+                    </div>
+                    
+                    <div id="historyContainer" class="flex flex-col gap-2 flex-grow overflow-y-auto max-h-[300px] pr-2">
+                        <div id="emptyHistoryMsg" class="flex flex-col items-center justify-center h-32 text-slate-400 opacity-70">
+                            <i class="fas fa-box-open text-3xl mb-2"></i>
+                            <p class="text-sm font-medium">Chưa có kết quả bốc thăm</p>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Danh sách mẫu
+            const defaultNames = [
+                "VĐV Đặng Đồng Hiếu",
+                "VĐV Đinh Quốc Khánh",
+                "VĐV Nguyễn Hải Dương",
+                "VĐV Đỗ Đức Định",
+                "VĐV Trần Hà Kỳ Anh",
+                "VĐV Đặng Quang Dũng",
+                "VĐV Vũ Văn Thanh",
+                "VĐV Lê Trọng Tài"
+            ];
+
+            // Màu Pickleball (Xanh ngọc, Vàng chanh, Trắng, Xanh biển đậm)
+            const sliceColors = [
+                "#10b981", // Emerald 500
+                "#fde047", // Yellow 300
+                "#ffffff", // White
+                "#3b82f6"  // Blue 500
+            ];
+
+            // DOM Elements
+            const canvas = document.getElementById('wheelCanvas');
+            const ctx = canvas.getContext('2d');
+            const spinBtn = document.getElementById('spinBtn');
+            const namesInput = document.getElementById('namesInput');
+            const historyContainer = document.getElementById('historyContainer');
+            const emptyHistoryMsg = document.getElementById('emptyHistoryMsg');
+            const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+            const winnerDisplay = document.getElementById('winnerDisplay');
+            const playerCountSpan = document.getElementById('playerCount');
+            
+            const removeWinnerCb = document.getElementById('removeWinnerCb');
+            const soundCb = document.getElementById('soundCb');
+
+            // Biến trạng thái
+            let names = [...defaultNames];
+            let currentAngle = 0;
+            let isSpinning = false;
+            let spinVelocity = 0;
+            let animationFrameId;
+            let historyCount = 1;
+
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            let audioCtx = null;
+
+            function initAudio() {
+                if (!audioCtx) {
+                    audioCtx = new AudioContext();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }
+
+            function playTickSound() {
+                if (!soundCb.checked || !audioCtx) return;
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.03);
+                    
+                    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.03);
+                    
+                    osc.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.03);
+                } catch(e) { console.log(e); }
+            }
+
+            namesInput.value = names.join('\n');
+            updatePlayerCount();
+
+            // Lắng nghe sự kiện thay đổi text để vẽ lại vòng quay realtime
+            namesInput.addEventListener('input', () => {
+                const rawNames = namesInput.value.split('\n').map(n => n.trim()).filter(n => n !== '');
+                names = rawNames.length === 0 ? ["Nhập danh sách VĐV"] : rawNames;
+                updatePlayerCount();
+                drawWheel();
+            });
+
+            function updatePlayerCount() {
+                const count = names[0] === "Nhập danh sách VĐV" ? 0 : names.length;
+                playerCountSpan.innerText = count + " VĐV";
+            }
+
+            function drawWheel() {
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const radius = canvas.width / 2;
+                const sliceAngle = (Math.PI * 2) / names.length;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                for (let i = 0; i < names.length; i++) {
+                    const startAngle = currentAngle + i * sliceAngle;
+                    const endAngle = startAngle + sliceAngle;
+
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                    ctx.closePath();
+
+                    // Thuật toán chọn màu để lát cuối không trùng màu lát đầu
+                    let colorIndex = i % sliceColors.length;
+                    if (names.length > 1 && i === names.length - 1 && colorIndex === 0) {
+                        colorIndex = 1;
+                    }
+                    ctx.fillStyle = sliceColors[colorIndex];
+                    ctx.fill();
+                    
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = "rgba(0,0,0,0.1)";
+                    ctx.stroke();
+
+                    // Vẽ Text
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    const textAngle = startAngle + sliceAngle / 2;
+                    ctx.rotate(textAngle);
+                    
+                    ctx.font = "bold 32px 'Inter', sans-serif";
+                    
+                    // Xử lý màu chữ tương phản
+                    const hexColor = sliceColors[colorIndex].toLowerCase();
+                    if (hexColor === "#ffffff" || hexColor === "#fde047") {
+                        ctx.fillStyle = "#1e293b"; // Chữ đen cho nền sáng
+                        // Thêm bóng trắng viền mờ cho chữ trên nền vàng
+                        ctx.shadowColor = "rgba(255,255,255,0.8)";
+                        ctx.shadowBlur = 4;
+                    } else {
+                        ctx.fillStyle = "#ffffff"; // Chữ trắng cho nền đậm
+                        ctx.shadowColor = "rgba(0,0,0,0.3)";
+                        ctx.shadowBlur = 4;
+                    }
+
+                    ctx.textAlign = "right";
+                    ctx.textBaseline = "middle";
+                    
+                    // Giới hạn độ dài text trên vòng quay
+                    let displayText = names[i];
+                    if (displayText.length > 25) {
+                        displayText = displayText.substring(0, 22) + "...";
+                    }
+                    
+                    ctx.fillText(displayText, radius - 45, 0);
+                    ctx.restore();
+                }
+            }
+
+            let lastTickIndex = -1;
+
+            function animateSpin() {
+                spinVelocity *= 0.985; // Ma sát
+                currentAngle += spinVelocity;
+                currentAngle = currentAngle % (Math.PI * 2);
+
+                drawWheel();
+
+                // Check Tick sound
+                const sliceAngle = (Math.PI * 2) / names.length;
+                let normalizedAngle = currentAngle % (Math.PI * 2);
+                if (normalizedAngle < 0) normalizedAngle += Math.PI * 2;
+                
+                let pointerAngle = (Math.PI * 2 - normalizedAngle) % (Math.PI * 2);
+                let currentIndex = Math.floor(pointerAngle / sliceAngle);
+                
+                if (currentIndex !== lastTickIndex && spinVelocity > 0.01) {
+                    playTickSound();
+                    lastTickIndex = currentIndex;
+                }
+
+                if (spinVelocity < 0.002) {
+                    cancelAnimationFrame(animationFrameId);
+                    isSpinning = false;
+                    resetSpinButton();
+                    handleSpinStop(currentIndex);
+                } else {
+                    animationFrameId = requestAnimationFrame(animateSpin);
+                }
+            }
+
+            spinBtn.addEventListener('click', () => {
+                if (isSpinning || names[0] === "Nhập danh sách VĐV") return;
+                
+                initAudio();
+                isSpinning = true;
+                spinBtn.disabled = true;
+                spinBtn.innerHTML = '<span class="text-xl">ĐANG QUAY</span>';
+                winnerDisplay.style.opacity = '0';
+                winnerDisplay.style.transform = 'scale(0.9)';
+                
+                // Tốc độ quay ngẫu nhiên
+                spinVelocity = 0.6 + Math.random() * 0.3; 
+                animateSpin();
+            });
+
+            function resetSpinButton() {
+                spinBtn.disabled = false;
+                spinBtn.innerHTML = `
+                    <span>QUAY</span>
+                    <i class="fas fa-hand-pointer text-sm mt-1 text-emerald-500 animate-bounce"></i>
+                `;
+            }
+
+            function handleSpinStop(winningIndex) {
+                const winner = names[winningIndex];
+                
+                // Hiển thị tên
+                winnerDisplay.innerHTML = `<i class="fas fa-medal text-yellow-500 mr-2"></i> ${winner}`;
+                winnerDisplay.style.opacity = '1';
+                winnerDisplay.style.transform = 'scale(1)';
+
+                fireConfetti();
+                addToHistory(winner);
+
+                if (removeWinnerCb.checked) {
+                    setTimeout(() => {
+                        names.splice(winningIndex, 1);
+                        if (names.length === 0) {
+                            names = ["Nhập danh sách VĐV"];
+                            namesInput.value = "";
+                        } else {
+                            namesInput.value = names.join('\n');
+                        }
+                        updatePlayerCount();
+                        drawWheel();
+                    }, 2000); // Trì hoãn 2 giây để xem kết quả trước khi xoá
+                }
+            }
+
+            function addToHistory(name) {
+                if (name === "Nhập danh sách VĐV") return;
+                
+                emptyHistoryMsg.style.display = 'none';
+
+                const item = document.createElement('div');
+                item.className = "history-item bg-slate-50 border border-slate-100 p-3 rounded-lg flex items-center justify-between";
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">
+                            #${historyCount++}
+                        </div>
+                        <span class="font-bold text-slate-700">${name}</span>
+                    </div>
+                    <i class="fas fa-check-circle text-emerald-500"></i>
+                `;
+                
+                historyContainer.insertBefore(item, historyContainer.firstChild);
+            }
+
+            clearHistoryBtn.addEventListener('click', () => {
+                historyCount = 1;
+                const items = historyContainer.querySelectorAll('.history-item');
+                items.forEach(item => item.remove());
+                emptyHistoryMsg.style.display = 'flex';
+                winnerDisplay.style.opacity = '0';
+            });
+
+            function fireConfetti() {
+                var duration = 3 * 1000;
+                var end = Date.now() + duration;
+
+                (function frame() {
+                    confetti({
+                        particleCount: 5,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0, y: 0.8 },
+                        colors: ['#10b981', '#fde047', '#3b82f6', '#ef4444']
+                    });
+                    confetti({
+                        particleCount: 5,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1, y: 0.8 },
+                        colors: ['#10b981', '#fde047', '#3b82f6', '#ef4444']
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+            }
+
+            // Vẽ lần đầu tiên
+            drawWheel();
+        });
+    </script>
+</body>
+</html>
